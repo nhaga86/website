@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prerequisites</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --text: #1a1a1a;
+    --muted: #5f6368;
+    --accent: #2f6fed;
+    --border: #e3e6ea;
+    --card-bg: #f7f8fa;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14161a;
+      --text: #f0f1f3;
+      --muted: #a3a9b3;
+      --accent: #6ea0ff;
+      --border: #2a2d33;
+      --card-bg: #1c1f24;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    color: var(--muted);
+    margin-top: 0;
+    margin-bottom: 40px;
+  }
+  h2 {
+    font-size: 1.25rem;
+    margin-top: 40px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+  }
+  ul.checklist {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  ul.checklist li {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  ul.checklist input[type="checkbox"] {
+    margin-top: 4px;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+    flex-shrink: 0;
+  }
+  .item-text strong {
+    display: block;
+  }
+  .item-text span {
+    color: var(--muted);
+    font-size: 0.92rem;
+  }
+  a { color: var(--accent); }
+  .note {
+    margin-top: 40px;
+    padding: 16px;
+    border-left: 3px solid var(--accent);
+    background: var(--card-bg);
+    border-radius: 0 8px 8px 0;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Prerequisites</h1>
+    <p class="subtitle">Please make sure you meet the following requirements before getting started.</p>
+
+    <h2>Required knowledge</h2>
+    <ul class="checklist">
+      <li>
+        <input type="checkbox" id="k1">
+        <label class="item-text" for="k1">
+          <strong>Basic familiarity with the subject</strong>
+          <span>Comfortable with the fundamentals covered in an intro-level overview.</span>
+        </label>
+      </li>
+    </ul>
+
+    <h2>Required tools</h2>
+    <ul class="checklist">
+      <li>
+        <input type="checkbox" id="t1">
+        <label class="item-text" for="t1">
+          <strong>A computer with internet access</strong>
+          <span>Any modern desktop or laptop running an up-to-date browser.</span>
+        </label>
+      </li>
+      <li>
+        <input type="checkbox" id="t2">
+        <label class="item-text" for="t2">
+          <strong>An account / sign-up completed</strong>
+          <span>Register in advance so you're ready to go on day one.</span>
+        </label>
+      </li>
+    </ul>
+
+    <h2>Setup steps</h2>
+    <ul class="checklist">
+      <li>
+        <input type="checkbox" id="s1">
+        <label class="item-text" for="s1">
+          <strong>Install required software</strong>
+          <span>Follow the setup instructions before the session begins.</span>
+        </label>
+      </li>
+    </ul>
+
+    <div class="note">
+      This is a starter template — replace the placeholder items above with the actual
+      requirements for your course, workshop, or project.
+    </div>
+  </div>
+</body>
+</html>
