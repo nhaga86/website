@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getApiUser } from "@/lib/auth";
 import { jsonError, notFound, unauthorized } from "@/lib/api";
-import { suggestPalettes } from "@/lib/openai";
+import { suggestPalettes } from "@/lib/ai";
 import { getOwnedProduct } from "@/lib/products";
 import { createClient } from "@/lib/supabase/server";
 import { isHexColor } from "@/lib/utils";

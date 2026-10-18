@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 const FEATURES = [
   "Unlimited AI ebooks, 8 chapters each",
-  "AI covers, palettes and font pairings",
+  "Cover designs, palettes and font pairings",
   "3 high converting sales page templates",
   "Stripe checkout with automatic PDF delivery",
   "Buyer list with CSV export",

@@ -2,7 +2,9 @@
 
 AI digital product builder. A creator types an idea, and the app writes the ebook, designs the brand and cover, builds a sales page, takes payment through Stripe and emails every buyer their PDF.
 
-**Stack:** Next.js 14 (App Router), Tailwind CSS, shadcn style components, Supabase (Auth, Postgres, Storage), OpenAI (GPT-4o and gpt-image-1), Stripe (Checkout, Billing, Connect), Resend, jsPDF.
+**Stack:** Next.js 14 (App Router), Tailwind CSS, shadcn style components, Supabase (Auth, Postgres, Storage), Google Gemini (free tier) for writing, Stripe (Checkout, Billing, Connect), Resend, jsPDF. Hosted on Render's free plan.
+
+**Running cost: $0.** Every service runs on its free tier. Stripe only takes its fee out of each sale. OpenAI is optional: add a key to turn on AI cover images.
 
 ## What's inside
 
@@ -41,9 +43,15 @@ cp .env.example .env.local
 4. **Authentication > URL Configuration:** set Site URL to your app URL and add `https://your-app.com/auth/callback` (plus `http://localhost:3000/auth/callback` for local work) to Redirect URLs.
 5. Copy the project URL, anon key and service role key into `.env.local`.
 
-### 3. OpenAI
+### 3. Google Gemini (free)
 
-Set `OPENAI_API_KEY`. Text defaults to `gpt-4o` and covers to `gpt-image-1`. Override with `OPENAI_MODEL` and `OPENAI_IMAGE_MODEL` (`dall-e-3` also works).
+Go to aistudio.google.com, sign in, click **Get API key > Create API key**, and set `GEMINI_API_KEY`. No card needed. The model defaults to `gemini-flash-latest`; change it with `GEMINI_MODEL`.
+
+Free tier facts to know:
+- Limits are a few requests per minute and a daily cap. Check your live numbers in AI Studio. One product uses about 10 requests. The app waits and retries when it hits the per minute limit.
+- Google may use free tier prompts to improve its products. Tell your creators, and move to a paid Gemini tier when that becomes a concern.
+
+**Optional, paid:** set `OPENAI_API_KEY` to turn on AI cover images (`gpt-image-1`). Set `AI_PROVIDER=openai` as well to move chapter writing to OpenAI (`gpt-4o-mini` by default). Without a key, creators get a branded cover built from their title and colors, plus a cover prompt they can paste into any free image tool and upload.
 
 ### 4. Stripe
 
@@ -74,7 +82,7 @@ npm run dev
 
 ## Custom domains
 
-A creator saves a domain in Settings and points a CNAME at your app host. The middleware sees the unknown host and serves `/p/[slug]` for that creator's products only. On Vercel, set `VERCEL_TOKEN` and `VERCEL_PROJECT_ID` (and `VERCEL_TEAM_ID` for team projects) and domains get registered on your project automatically. Without those, add each domain under Project > Settings > Domains yourself.
+A creator saves a domain in Settings and points a CNAME at your app host. The middleware sees the unknown host and serves `/p/[slug]` for that creator's products only. On Render, add each creator domain under the service's **Settings > Custom Domains**. On Vercel, set `VERCEL_TOKEN` and `VERCEL_PROJECT_ID` (and `VERCEL_TEAM_ID` for team projects) and domains get registered on your project automatically. Without those, add each domain under Project > Settings > Domains yourself.
 
 ## How a sale flows
 
@@ -83,6 +91,13 @@ A creator saves a domain in Settings and points a CNAME at your app host. The mi
 3. Fulfillment records the sale, bumps product counters, saves the buyer to `subscribers`, emails the download link through Resend and syncs the buyer to Kit or MailerLite.
 4. The download link `/api/download?session_id=...` never expires. Each click signs a fresh 10 minute URL to the private PDF.
 
-## Deploy
+## Deploy (free, on Render)
 
-Deploy to Vercel, add every variable from `.env.example`, and set `NEXT_PUBLIC_APP_URL` to the production URL. AI and PDF routes declare `maxDuration` up to 120 seconds, so cover generation needs a plan that allows that (Vercel Pro). Chapters are written in parallel, one request each, so every request stays well under 60 seconds.
+1. Sign up at render.com with GitHub.
+2. Click **New > Blueprint** and pick this repository. Render reads `render.yaml` and creates a free web service.
+3. Fill in each secret value when prompted. Leave `NEXT_PUBLIC_APP_URL` as a placeholder for now.
+4. After the first deploy, copy the service address (`https://business-creationality.onrender.com` or similar), set it as `NEXT_PUBLIC_APP_URL`, and click **Manual Deploy > Deploy latest commit**. Values starting with `NEXT_PUBLIC_` are baked in at build time, so they need a rebuild.
+
+The free service sleeps after about 15 minutes without traffic. The first visit after that takes close to a minute. Upgrade the Render instance (or move to Vercel Pro) once buyers arrive.
+
+Vercel works too, but its free Hobby plan forbids commercial use and cuts off long requests.

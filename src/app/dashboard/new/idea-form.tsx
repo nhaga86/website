@@ -60,7 +60,8 @@ export function IdeaForm() {
       const update = (n: number, status: ChapterState["status"]) =>
         setChapters((prev) => prev.map((c) => (c.n === n ? { ...c, status } : c)));
 
-      await runPool(list, 4, async (c) => {
+      // Two at a time keeps us inside the free AI tier rate limits
+      await runPool(list, 2, async (c) => {
         update(c.n, "writing");
         const r = await fetch(`/api/products/${data.id}/chapters/${c.n}/generate`, { method: "POST" });
         update(c.n, r.ok ? "done" : "error");
@@ -116,7 +117,7 @@ export function IdeaForm() {
             </li>
           ))}
         </ul>
-        <p className="mt-6 text-center text-xs text-muted-foreground">Keep this tab open. This takes about a minute.</p>
+        <p className="mt-6 text-center text-xs text-muted-foreground">Keep this tab open. This takes two to three minutes.</p>
       </div>
     );
   }

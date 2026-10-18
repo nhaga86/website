@@ -16,7 +16,8 @@ function isPlatformHost(host: string) {
     host === appHost() ||
     host.startsWith("localhost") ||
     host.startsWith("127.0.0.1") ||
-    host.endsWith(".vercel.app")
+    host.endsWith(".vercel.app") ||
+    host.endsWith(".onrender.com")
   );
 }
 
