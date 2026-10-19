@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   BookOpen,
+  Copy,
   Eye,
   ImageIcon,
   Loader2,
@@ -42,7 +43,17 @@ const COLOR_FIELDS: { key: keyof BrandColors; label: string; hint: string }[] = 
   { key: "accent", label: "Accent", hint: "Light backgrounds" },
 ];
 
-export function EditorClient({ product, chapters: initialChapters, defaultAuthor }: { product: Product; chapters: Chapter[]; defaultAuthor: string }) {
+export function EditorClient({
+  product,
+  chapters: initialChapters,
+  defaultAuthor,
+  aiCovers,
+}: {
+  product: Product;
+  chapters: Chapter[];
+  defaultAuthor: string;
+  aiCovers: boolean;
+}) {
   const router = useRouter();
   const [title, setTitle] = useState(product.title);
   const [subtitle, setSubtitle] = useState(product.subtitle || "");
@@ -374,16 +385,34 @@ export function EditorClient({ product, chapters: initialChapters, defaultAuthor
             </TabsContent>
 
             <TabsContent value="cover" className="space-y-6">
+              {!coverUrl && (
+                <p className="rounded-xl bg-muted/60 p-3 text-sm text-muted-foreground">
+                  No image yet, so the preview shows a branded cover built from your title and colors. It works as a finished cover.
+                </p>
+              )}
               <div className="space-y-2">
-                <Label>AI cover prompt</Label>
+                <Label>Cover prompt</Label>
                 <Textarea rows={6} value={coverPrompt} onChange={(e) => markProduct(setCoverPrompt)(e.target.value)} />
-                <Button className="w-full" onClick={generateCover} disabled={!!busy}>
-                  {busy === "cover" ? <Loader2 className="animate-spin" /> : <Wand2 />}
-                  {busy === "cover" ? "Painting your cover (up to a minute)..." : coverUrl ? "Generate a new cover" : "Generate cover"}
-                </Button>
-              </div>
-              <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                <div className="h-px flex-1 bg-border" /> or <div className="h-px flex-1 bg-border" />
+                {aiCovers ? (
+                  <Button className="w-full" onClick={generateCover} disabled={!!busy}>
+                    {busy === "cover" ? <Loader2 className="animate-spin" /> : <Wand2 />}
+                    {busy === "cover" ? "Painting your cover (up to a minute)..." : coverUrl ? "Generate a new cover" : "Generate cover"}
+                  </Button>
+                ) : (
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-xs text-muted-foreground">Paste this prompt into a free image tool, then upload the result below.</p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        navigator.clipboard.writeText(coverPrompt);
+                        toast.success("Prompt copied");
+                      }}
+                    >
+                      <Copy /> Copy
+                    </Button>
+                  </div>
+                )}
               </div>
               <div>
                 <input ref={fileRef} type="file" accept="image/png,image/jpeg" className="hidden" onChange={(e) => e.target.files?.[0] && uploadCover(e.target.files[0])} />

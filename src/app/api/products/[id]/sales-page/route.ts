@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getApiUser } from "@/lib/auth";
 import { jsonError, notFound, unauthorized } from "@/lib/api";
-import { generateSalesPageCopy } from "@/lib/openai";
+import { generateSalesPageCopy } from "@/lib/ai";
 import { getOwnedProductWithChapters } from "@/lib/products";
 import { createClient } from "@/lib/supabase/server";
 

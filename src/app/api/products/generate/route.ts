@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getApiUser } from "@/lib/auth";
 import { jsonError, unauthorized } from "@/lib/api";
-import { generateProductPlan } from "@/lib/openai";
+import { generateProductPlan } from "@/lib/ai";
 import { uniqueSlug } from "@/lib/products";
 import { createClient } from "@/lib/supabase/server";
 import { TONES } from "@/lib/types";

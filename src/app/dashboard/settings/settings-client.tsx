@@ -229,7 +229,7 @@ export function SettingsClient({ tab, profile, justConnected, appHost, feePercen
                     </table>
                   </div>
                   <p className="text-muted-foreground">
-                    For a root domain (yoursite.com) use an A record pointing to 76.76.21.21 instead. DNS changes can take up to an hour. Your pages will then load at https://{profile.custom_domain}/your-product-link.
+                    For a root domain (yoursite.com), use the A record your host lists instead of a CNAME. DNS changes can take up to an hour. Your pages will then load at https://{profile.custom_domain}/your-product-link.
                   </p>
                 </div>
               )}

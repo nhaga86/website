@@ -213,7 +213,7 @@ export function ReviewClient({ product, chapters: initialChapters }: { product: 
           <Card>
             <CardHeader>
               <CardTitle>Cover design prompt</CardTitle>
-              <CardDescription>Used to generate your cover art in the next step.</CardDescription>
+              <CardDescription>A description of cover art that fits this book. Use it in the next step.</CardDescription>
             </CardHeader>
             <CardContent>
               <Textarea rows={6} value={coverPrompt} onChange={(e) => setCoverPrompt(e.target.value)} />

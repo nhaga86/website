@@ -13,7 +13,7 @@ import { TONES, type Tone } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const EXAMPLES = [
-  { idea: "A 30 day morning routine for women in early sobriety", audience: "Women in their first year of recovery", tone: "Spiritual" as Tone },
+  { idea: "A beginner's guide to opening an Etsy shop and making the first sale", audience: "Crafters selling online for the first time", tone: "Friendly" as Tone },
   { idea: "How to price freelance design work and stop undercharging", audience: "New freelance designers", tone: "Bold" as Tone },
   { idea: "Meal prep on a $50 weekly budget", audience: "Busy college students", tone: "Friendly" as Tone },
 ];
@@ -60,7 +60,8 @@ export function IdeaForm() {
       const update = (n: number, status: ChapterState["status"]) =>
         setChapters((prev) => prev.map((c) => (c.n === n ? { ...c, status } : c)));
 
-      await runPool(list, 4, async (c) => {
+      // Two at a time keeps us inside the free AI tier rate limits
+      await runPool(list, 2, async (c) => {
         update(c.n, "writing");
         const r = await fetch(`/api/products/${data.id}/chapters/${c.n}/generate`, { method: "POST" });
         update(c.n, r.ok ? "done" : "error");
@@ -116,7 +117,7 @@ export function IdeaForm() {
             </li>
           ))}
         </ul>
-        <p className="mt-6 text-center text-xs text-muted-foreground">Keep this tab open. This takes about a minute.</p>
+        <p className="mt-6 text-center text-xs text-muted-foreground">Keep this tab open. This takes two to three minutes.</p>
       </div>
     );
   }
@@ -136,13 +137,13 @@ export function IdeaForm() {
             rows={3}
             value={idea}
             onChange={(e) => setIdea(e.target.value)}
-            placeholder="A guided journal that helps women in recovery rebuild self trust"
+            placeholder="A step by step guide to launching a paid newsletter"
           />
         </div>
         <div className="grid gap-6 sm:grid-cols-[1fr_200px]">
           <div className="space-y-2">
             <Label htmlFor="audience">Target audience</Label>
-            <Input id="audience" required value={audience} onChange={(e) => setAudience(e.target.value)} placeholder="Women 25 to 45 in their first year sober" />
+            <Input id="audience" required value={audience} onChange={(e) => setAudience(e.target.value)} placeholder="Creators with under 1,000 followers" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="tone">Tone</Label>

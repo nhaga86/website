@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getApiUser } from "@/lib/auth";
 import { jsonError, notFound, unauthorized } from "@/lib/api";
-import { generateCoverImage } from "@/lib/openai";
+import { coverGenerationEnabled, generateCoverImage } from "@/lib/ai";
 import { getOwnedProduct } from "@/lib/products";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -12,6 +12,7 @@ export const maxDuration = 120;
 export async function POST(request: Request, { params }: { params: { id: string } }) {
   const current = await getApiUser();
   if (!current) return unauthorized();
+  if (!coverGenerationEnabled()) return jsonError("AI covers are turned off. Upload your own cover instead.");
   const product = await getOwnedProduct(params.id);
   if (!product) return notFound();
   const { prompt } = (await request.json().catch(() => ({}))) as { prompt?: string };

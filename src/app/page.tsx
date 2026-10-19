@@ -32,7 +32,7 @@ const STEPS = [
 
 const FEATURES = [
   { icon: BookOpen, title: "Full ebook, written", body: "Eight chapters of around 400 words each, with headings, lists and action steps. Not an outline. The whole thing." },
-  { icon: ImageIcon, title: "AI cover art", body: "Generate cover artwork from a prompt the AI writes for you, or upload your own design." },
+  { icon: ImageIcon, title: "Cover design", body: "A branded cover built from your title and colors, plus a ready cover prompt. Upload your own design any time." },
   { icon: Palette, title: "Brand kit in one click", body: "Five brand name ideas, a three color palette and a font pairing that fits your tone." },
   { icon: LayoutTemplate, title: "Sales pages that convert", body: "Three proven layouts. Desktop and mobile preview. Your own link at /p/your-product." },
   { icon: Download, title: "Automatic delivery", body: "Stripe takes the payment. Resend emails the PDF. A thank you page hands over the download." },

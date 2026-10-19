@@ -3,15 +3,87 @@ import OpenAI from "openai";
 import { FONT_PAIRINGS } from "@/lib/fonts";
 import type { BrandColors, FaqItem, Testimonial } from "@/lib/types";
 
+/**
+ * Text runs on Google Gemini's free tier by default. Set AI_PROVIDER=openai to
+ * use OpenAI instead. AI cover images need an OpenAI key, since image models
+ * have no free tier.
+ */
+type Provider = "gemini" | "openai";
+
+function provider(): Provider {
+  const pick = process.env.AI_PROVIDER?.toLowerCase();
+  if (pick === "openai" || pick === "gemini") return pick;
+  return process.env.GEMINI_API_KEY || !process.env.OPENAI_API_KEY ? "gemini" : "openai";
+}
+
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";
+const OPENAI_TEXT_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
+export const IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || "gpt-image-1";
+
 let client: OpenAI | null = null;
-export function openai() {
+function openai() {
   if (!process.env.OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not set");
   if (!client) client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   return client;
 }
 
-export const TEXT_MODEL = process.env.OPENAI_MODEL || "gpt-4o";
-export const IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || "gpt-image-1";
+/** AI covers only switch on when an OpenAI key is present. */
+export function coverGenerationEnabled() {
+  return !!process.env.OPENAI_API_KEY;
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+async function gemini(system: string, user: string, temperature: number, json: boolean) {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) throw new Error("GEMINI_API_KEY is not set");
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent`;
+  const body = JSON.stringify({
+    systemInstruction: { parts: [{ text: system }] },
+    contents: [{ role: "user", parts: [{ text: user }] }],
+    generationConfig: { temperature, ...(json ? { responseMimeType: "application/json" } : {}) },
+  });
+
+  // The free tier allows only a few requests per minute, so wait and retry when rate limited
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+      body,
+    });
+    if (res.ok) {
+      const data = (await res.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
+      const text = data.candidates?.[0]?.content?.parts?.map((p) => p.text || "").join("") || "";
+      if (!text) throw new Error("Gemini returned an empty response");
+      return text;
+    }
+    const errText = await res.text();
+    if ((res.status === 429 || res.status === 503) && attempt < 4) {
+      const hinted = Number(errText.match(/"retryDelay":\s*"(\d+)/)?.[1]);
+      await sleep((hinted > 0 ? hinted : 8 * (attempt + 1)) * 1000);
+      continue;
+    }
+    if (res.status === 429) throw new Error("The free AI quota is used up for now. Try again in a few minutes.");
+    throw new Error(`Gemini ${res.status}: ${errText.slice(0, 300)}`);
+  }
+}
+
+async function complete(opts: { system: string; user: string; temperature?: number; json?: boolean }) {
+  const { system, user, temperature = 0.8, json = false } = opts;
+  if (provider() === "gemini") return gemini(system, user, temperature, json);
+  const res = await openai().chat.completions.create({
+    model: OPENAI_TEXT_MODEL,
+    temperature,
+    ...(json ? { response_format: { type: "json_object" as const } } : {}),
+    messages: [
+      { role: "system", content: system },
+      { role: "user", content: user },
+    ],
+  });
+  const text = res.choices[0]?.message?.content;
+  if (!text) throw new Error("OpenAI returned an empty response");
+  return text;
+}
 
 const STYLE_RULES = `Writing rules:
 - Write like a sharp human expert, never like a content generator.
@@ -22,18 +94,13 @@ const STYLE_RULES = `Writing rules:
 - Give concrete, specific, useful detail. Every paragraph must teach or move the reader.`;
 
 async function jsonCompletion<T>(system: string, user: string, temperature = 0.8): Promise<T> {
-  const res = await openai().chat.completions.create({
-    model: TEXT_MODEL,
+  const text = await complete({
+    system: `${system}\n\n${STYLE_RULES}\n\nRespond with valid JSON only.`,
+    user,
     temperature,
-    response_format: { type: "json_object" },
-    messages: [
-      { role: "system", content: `${system}\n\n${STYLE_RULES}\n\nRespond with valid JSON only.` },
-      { role: "user", content: user },
-    ],
+    json: true,
   });
-  const text = res.choices[0]?.message?.content;
-  if (!text) throw new Error("OpenAI returned an empty response");
-  return JSON.parse(text) as T;
+  return JSON.parse(text.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/i, "")) as T;
 }
 
 export interface GeneratedProduct {
@@ -92,17 +159,10 @@ export async function generateChapterContent(input: {
   chapterSummary?: string | null;
   outline: string[];
 }) {
-  const res = await openai().chat.completions.create({
-    model: TEXT_MODEL,
-    temperature: 0.8,
-    messages: [
-      {
-        role: "system",
-        content: `You are an expert author writing a chapter of a paid ebook. Output clean HTML only using <h2>, <h3>, <p>, <ul>, <ol>, <li>, <strong>, <em>, <blockquote>. No <html>, <body>, markdown, or code fences. Do not repeat the chapter title as a heading.\n\n${STYLE_RULES}`,
-      },
-      {
-        role: "user",
-        content: `Ebook: "${input.productTitle}"${input.subtitle ? ` (${input.subtitle})` : ""}
+  let html = (
+    await complete({
+      system: `You are an expert author writing a chapter of a paid ebook. Output clean HTML only using <h2>, <h3>, <p>, <ul>, <ol>, <li>, <strong>, <em>, <blockquote>. No <html>, <body>, markdown, or code fences. Do not repeat the chapter title as a heading.\n\n${STYLE_RULES}`,
+      user: `Ebook: "${input.productTitle}"${input.subtitle ? ` (${input.subtitle})` : ""}
 Audience: ${input.audience || "general readers"}
 Tone: ${input.tone || "Friendly"}
 Full outline:
@@ -112,10 +172,8 @@ Write chapter ${input.chapterNumber}: "${input.chapterTitle}".
 ${input.chapterSummary ? `This chapter covers: ${input.chapterSummary}` : ""}
 
 Length: about 400 words. Include at least one subheading (<h3>), one list of practical steps or points, and end with a short action step the reader can take today.`,
-      },
-    ],
-  });
-  let html = res.choices[0]?.message?.content?.trim() || "";
+    })
+  ).trim();
   html = html.replace(/^```(?:html)?\s*/i, "").replace(/```\s*$/i, "").replace(/\s*\u2014\s*/g, ", ");
   return html;
 }
